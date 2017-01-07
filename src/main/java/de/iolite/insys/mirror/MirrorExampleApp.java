@@ -176,6 +176,8 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 			this.mirrorManager.createView(VIEW_ID_LNDW, ICON_URL_LNDW, VIEW_URL_LNDW, "Lange Nacht der Wissenschaften", false);
 			this.mirrorManager.createView(VIEW_ID_WELCOME, ICON_URL_WELCOME, VIEW_URL_WELCOME, "Greeting");
 			this.mirrorManager.createView(VIEW_ID_HELLO_WORLD, ICON_URL_HELLO_WORLD, VIEW_URL_HELLO_WORLD, "Greeting", false);
+			this.mirrorManager.createView(VIEW_ID_CALENDAR, ICON_URL_HELLO_WORLD, VIEW_URL_CALENDAR, "Calendar", false);
+			
 		}
 		catch (final IOLITEAPINotResolvableException e) {
 			LOG.error("Could not provide views for mirrors! Please make sure that your IOLITE version is up to date!", e);
@@ -301,8 +303,8 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 					final String template = IOUtils.toString(is, "UTF-8");
 					return new IOLITEHTTPStaticResponse(
 							
-							template.replaceFirst(Pattern.quote("{QUOTE}"), MirrorExampleApp.this.quoteOfTheDay.getQuote())
-									.replaceFirst(Pattern.quote("{AUTHOR}"), MirrorExampleApp.this.quoteOfTheDay.getAuthor()),
+							template.replaceFirst(Pattern.quote("{CALENDAR}"), MirrorExampleApp.this.calendar.toString()),
+									//.replaceFirst(Pattern.quote("{AUTHOR}"), MirrorExampleApp.this.quoteOfTheDay.getAuthor()),
 							IOLITEHTTPResponse.HTML_CONTENT_TYPE);
 				}
 				catch (final Exception e) {
