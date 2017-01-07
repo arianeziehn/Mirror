@@ -1,6 +1,9 @@
 package de.iolite.insys.mirror;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
@@ -31,6 +34,8 @@ import de.iolite.common.requesthandler.IOLITEHTTPRequestHandler;
 import de.iolite.common.requesthandler.IOLITEHTTPResponse;
 import de.iolite.common.requesthandler.IOLITEHTTPStaticResponse;
 import de.iolite.common.requesthandler.StaticResources;
+import de.iolite.insys.data.DailyEvents;
+import de.iolite.insys.data.Quickstart2;
 import de.iolite.insys.mirror.api.MirrorApiException;
 import de.iolite.insys.mirror.api.SimpleMirrorManager;
 
@@ -50,6 +55,11 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 	private static final String VIEW_ID_CLOCK = "DateTimeView";
 	private static final String ICON_URL_CLOCK = "DateTimeView/clock-icon.jpg";
 	private static final String VIEW_URL_CLOCK = "DateTimeView/clock.html";
+	
+	// CALENDAR PAGE 
+	private static final String VIEW_ID_CALENDAR = "CalendarView";
+	//private static final String ICON_URL_CLOCK = "DateTimeView/clock-icon.jpg";
+	private static final String VIEW_URL_CALENDAR = "CalendarView/calendar.html";
 
 	private static final String VIEW_ID_WELCOME = "WelcomeView";
 	private static final String ICON_URL_WELCOME = "WelcomeView/welcome.png";
@@ -73,6 +83,7 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 
 	private Quote quoteOfTheDay = null;
 	private ScheduledFuture<?> quoteUpdateThread = null;
+	private DailyEvents calendar = null; 
 
 	private SimpleMirrorManager mirrorManager;
 
@@ -106,6 +117,21 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 		quotes.add(new Quote("Auch Umwege erweitern unseren Horizont.", "Ernst Ferstl"));
 		quotes.add(new Quote("Jeder Tag, an dem du nicht lächelst, ist ein verlorener Tag.", "Charlie Chaplin"));
 		quotes.add(new Quote("Gib jedem Tag die Chance, der schönste deines Lebens zu werden.", "Mark Twain"));
+		
+		
+			try {
+				calendar = Quickstart2.getData();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (GeneralSecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
 	}
 
 	/**
@@ -137,6 +163,7 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 			frontendApi.registerPublicClasspathStaticResource("", HTML_RESOURCES + "/index.html");
 			frontendApi.registerPublicRequestHandler(VIEW_URL_WELCOME, createHelloWorldRequestHandler(storageApi));
 			frontendApi.registerPublicRequestHandler(VIEW_URL_QUOTE, createQuoteRequestHandler());
+			frontendApi.registerPublicRequestHandler(VIEW_URL_CALENDAR, createCalendarRequestHandler());
 		}
 		catch (final FrontendAPIException e) {
 			LOG.error(MSG_ERR_REGISTER_FRONTEND_RESOURCES, e);
@@ -240,6 +267,40 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 					}
 					final String template = IOUtils.toString(is, "UTF-8");
 					return new IOLITEHTTPStaticResponse(
+							template.replaceFirst(Pattern.quote("{QUOTE}"), MirrorExampleApp.this.quoteOfTheDay.getQuote())
+									.replaceFirst(Pattern.quote("{AUTHOR}"), MirrorExampleApp.this.quoteOfTheDay.getAuthor()),
+							IOLITEHTTPResponse.HTML_CONTENT_TYPE);
+				}
+				catch (final Exception e) {
+					LOG.error(e.getMessage(), e);
+					return null;
+				}
+			}
+		};
+
+	}
+	//TODO
+	private IOLITEHTTPRequestHandler createCalendarRequestHandler() {
+
+		return new IOLITEHTTPRequestHandler() {
+
+			@Override
+			public void handlerRemoved(final String mapping, final EntityIdentifier callerEntityID) {
+				// nothing to do
+
+			}
+
+			@Override
+			public IOLITEHTTPResponse handleRequest(final IOLITEHTTPRequest request, final EntityIdentifier callerEntityID, final String subPath) {
+				try {
+					final InputStream is = this.getClass().getClassLoader().getResourceAsStream(HTML_RESOURCES + "/" + VIEW_URL_CALENDAR);
+					if (is == null) {
+						LOG.error("Resource not found: {}", HTML_RESOURCES + "/" + VIEW_URL_CALENDAR);
+						return new IOLITEHTTPStaticResponse(HTTPStatus.NotFound, IOLITEHTTPResponse.HTML_CONTENT_TYPE);
+					}
+					final String template = IOUtils.toString(is, "UTF-8");
+					return new IOLITEHTTPStaticResponse(
+							
 							template.replaceFirst(Pattern.quote("{QUOTE}"), MirrorExampleApp.this.quoteOfTheDay.getQuote())
 									.replaceFirst(Pattern.quote("{AUTHOR}"), MirrorExampleApp.this.quoteOfTheDay.getAuthor()),
 							IOLITEHTTPResponse.HTML_CONTENT_TYPE);

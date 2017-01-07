@@ -92,7 +92,7 @@ public class Quickstart2 {
 				APPLICATION_NAME).build();
 	}
 
-	public static void main(String[] args) throws IOException, ParseException,
+	public static DailyEvents getData() throws IOException, ParseException,
 			GeneralSecurityException {
 		// Build a new authorized API client service.
 		// Note: Do not confuse this class with the
@@ -117,11 +117,12 @@ public class Quickstart2 {
 				.setTimeMin(now)
 				// just today's Events
 				// .setTimeMax(t)
-				.setOrderBy("startTime").setSingleEvents(true)
-				.execute();
+				.setOrderBy("startTime").setSingleEvents(true).execute();
 
 		List<Event> items = events.getItems();
 		List<GoogleEvent> allToday = new LinkedList<GoogleEvent>();
+
+		DailyEvents todayFinal = new DailyEvents();
 
 		for (com.google.api.services.calendar.model.Event event : items) {
 			GoogleEvent today = new GoogleEvent();
@@ -222,11 +223,14 @@ public class Quickstart2 {
 				// System.out.println(event..getVisibility());
 
 				allToday.add(today);
-				// event.getCreator();
-				DailyEvents todayFinal = new DailyEvents(allToday);
+				todayFinal = new DailyEvents(allToday);
+
+				// return todayFinal;
 
 			}
-		}
+		}// for loop
+		return todayFinal;
+		// event.getCreator();
 	}
 
 }

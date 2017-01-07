@@ -13,8 +13,20 @@ public class DailyEvents {
 		System.out.println(this.toString());
 	}
 	
+	public DailyEvents(){
+		
+	}
+	
 	
 		
+		public List<GoogleEvent> getTodayEvents() {
+		return todayEvents;
+	}
+
+	public void setTodayEvents(List<GoogleEvent> todayEvents) {
+		this.todayEvents = todayEvents;
+	}
+
 		@Override
 		public String toString(){
 		String event = "";	
@@ -48,6 +60,8 @@ public class DailyEvents {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		
+		
 
 	}
 
