@@ -2,6 +2,7 @@ package de.iolite.insys.mirror;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -130,6 +131,9 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 			} catch (GeneralSecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		
 	}
@@ -205,7 +209,8 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 			}
 		}, 0, 1, TimeUnit.MINUTES);
 		LOG.debug("Mirror Views got registered!");
-
+		LOG.info("ExampleApp Path: "+frontendApi.getBaseURI());
+		System.out.println("v1");
 	}
 
 	private IOLITEHTTPRequestHandler createHelloWorldRequestHandler(final StorageAPI storageApi) {
@@ -301,9 +306,11 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 						return new IOLITEHTTPStaticResponse(HTTPStatus.NotFound, IOLITEHTTPResponse.HTML_CONTENT_TYPE);
 					}
 					final String template = IOUtils.toString(is, "UTF-8");
+
+					String replacement = MirrorExampleApp.this.calendar.toString();
+					String content = template.replaceFirst(Pattern.quote("{CALENDAR}"), replacement);
 					return new IOLITEHTTPStaticResponse(
-							
-							template.replaceFirst(Pattern.quote("{CALENDAR}"), MirrorExampleApp.this.calendar.toString()),
+							content,
 									//.replaceFirst(Pattern.quote("{AUTHOR}"), MirrorExampleApp.this.quoteOfTheDay.getAuthor()),
 							IOLITEHTTPResponse.HTML_CONTENT_TYPE);
 				}

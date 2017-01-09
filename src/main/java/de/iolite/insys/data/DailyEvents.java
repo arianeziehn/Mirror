@@ -30,6 +30,7 @@ public class DailyEvents {
 		@Override
 		public String toString(){
 		String event = "";	
+		if(!todayEvents.isEmpty()){
 		for(int i=0; i<todayEvents.size(); i++){
 		GoogleEvent dummy = todayEvents.get(i);
 		int minutes = dummy.end.get(Calendar.MINUTE);
@@ -54,15 +55,10 @@ public class DailyEvents {
 		}	
 			return event;
 		}
+		else{
+			return event+"today no upcoming events";
+		}
+		}
 
-
-		
-	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		
-		
-
-	}
 
 }

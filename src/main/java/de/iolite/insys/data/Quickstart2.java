@@ -11,12 +11,21 @@ import com.google.api.services.calendar.model.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.mortbay.log.Log;
 
 /**
  * Source mainly taken from
@@ -29,9 +38,9 @@ public class Quickstart2 {
 	private static final String APPLICATION_NAME = "Google Calendar API Java Quickstart";
 
 	/** Directory to store user credentials for this application. */
-	private static final java.io.File DATA_STORE_DIR = new java.io.File(
-			System.getProperty("user.home"),
-			".credentials/calendar-java-quickstart");
+//	private static final java.io.File DATA_STORE_DIR = new java.io.File(
+//			System.getProperty("user.home"),
+//			".credentials/calendar-java-quickstart");
 
 	/** Global instance of the {@link FileDataStoreFactory}. */
 	private static FileDataStoreFactory DATA_STORE_FACTORY;
@@ -55,7 +64,7 @@ public class Quickstart2 {
 	static {
 		try {
 			HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-			DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
+		//	DATA_STORE_FACTORY = new FileDataStoreFactory(DATA_STORE_DIR);
 		} catch (Throwable t) {
 			t.printStackTrace();
 			System.exit(1);
@@ -68,17 +77,28 @@ public class Quickstart2 {
 	 * @return an authorized Calendar client service
 	 * @throws IOException
 	 * @throws GeneralSecurityException
+	 * @throws URISyntaxException 
 	 */
 	public static com.google.api.services.calendar.Calendar getCalendarService()
-			throws IOException, GeneralSecurityException {
+			throws IOException, GeneralSecurityException, URISyntaxException {
+		URI uri = Quickstart2.class.getResource("My Project2.p12").toURI();
+		File p12File;
+		if (uri.getScheme().equals("jar")) {
+            final FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object> emptyMap());
+            p12File = fileSystem.getPath("src/main/resources/My Project2.p12").toFile();
+        } else {
+        	p12File = Paths.get(uri).toFile();
+        }
+		
 		GoogleCredential credential = new GoogleCredential.Builder()
 				.setTransport(HTTP_TRANSPORT)
 				.setJsonFactory(JSON_FACTORY)
 				.setServiceAccountId(
 						"calendarapp@massive-triumph-150916.iam.gserviceaccount.com")
+				//.setServiceAccountPrivateKeyId("0dc02b2ce032bd67fc5a039a61372a026358af6c")
 
 				.setServiceAccountPrivateKeyFromP12File(
-						new File("src/main/resources/My Project2.p12"))
+						p12File)
 				.setServiceAccountScopes(SCOPES)
 				// .setServiceAccountScopes(Collections.singleton(SQLAdminScopes.SQLSERVICE_ADMIN))
 				.setServiceAccountUser("arianeziehn@googlemail.com")
@@ -93,7 +113,7 @@ public class Quickstart2 {
 	}
 
 	public static DailyEvents getData() throws IOException, ParseException,
-			GeneralSecurityException {
+			GeneralSecurityException, URISyntaxException {
 		// Build a new authorized API client service.
 		// Note: Do not confuse this class with the
 		// com.google.api.services.calendar.model.Calendar class.
@@ -112,7 +132,7 @@ public class Quickstart2 {
 				day);
 
 		Events events = service.events().list("primary")
-		// .setMaxResults(20)
+		 .setMaxResults(5)
 		// just upcoming Events
 				.setTimeMin(now)
 				// just today's Events
@@ -122,7 +142,7 @@ public class Quickstart2 {
 		List<Event> items = events.getItems();
 		List<GoogleEvent> allToday = new LinkedList<GoogleEvent>();
 
-		DailyEvents todayFinal = new DailyEvents();
+		
 
 		for (com.google.api.services.calendar.model.Event event : items) {
 			GoogleEvent today = new GoogleEvent();
@@ -223,14 +243,21 @@ public class Quickstart2 {
 				// System.out.println(event..getVisibility());
 
 				allToday.add(today);
-				todayFinal = new DailyEvents(allToday);
-
+				
 				// return todayFinal;
 
 			}
 		}// for loop
+		DailyEvents todayFinal = new DailyEvents(allToday);
+		System.out.println(todayFinal.toString());
+		Log.debug(todayFinal.toString());
 		return todayFinal;
 		// event.getCreator();
+	}
+	
+	public static void main(String[] args) throws IOException, ParseException,
+	GeneralSecurityException, URISyntaxException {
+		getData();
 	}
 
 }
