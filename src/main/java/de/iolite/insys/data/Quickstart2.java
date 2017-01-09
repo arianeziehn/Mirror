@@ -5,12 +5,17 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.util.IOUtils;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.*;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
@@ -19,11 +24,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+
+
 
 import org.mortbay.log.Log;
 
@@ -71,6 +79,11 @@ public class Quickstart2 {
 		}
 	}
 
+	public InputStream getInput(){
+		InputStream in = getClass().getResourceAsStream("/My Project.p12");	
+		return in; 
+	}
+	
 	/**
 	 * Build and return an authorized Calendar client service.
 	 * 
@@ -79,17 +92,43 @@ public class Quickstart2 {
 	 * @throws GeneralSecurityException
 	 * @throws URISyntaxException 
 	 */
-	public static com.google.api.services.calendar.Calendar getCalendarService()
+	public com.google.api.services.calendar.Calendar getCalendarService()
 			throws IOException, GeneralSecurityException, URISyntaxException {
-		URI uri = Quickstart2.class.getResource("My Project2.p12").toURI();
-		File p12File;
-		if (uri.getScheme().equals("jar")) {
-            final FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object> emptyMap());
-            p12File = fileSystem.getPath("src/main/resources/My Project2.p12").toFile();
-        } else {
-        	p12File = Paths.get(uri).toFile();
-        }
-		
+//		  ArrayList<String> result = new ArrayList<String>();
+		  InputStream in = getInput();
+		 
+//          BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+//          //The line that will be read:
+//          String line = null;
+//          //Reads the source-file line-by-line until it ends:
+//          while ((line = reader.readLine()) != null) {
+//        	  
+//              //Adds the actual line to the result-array:
+//              result.add(line);
+//                          
+//          }
+          
+                 
+          String PREFIX = "MyProject";
+          String SUFFIX = ".p12";
+
+         File tempFile = File.createTempFile(PREFIX, SUFFIX);
+         //tempFile.deleteOnExit();
+              try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                  IOUtils.copy(in, out);
+              }
+          
+          System.out.println(tempFile.getAbsolutePath());
+    
+//		URI uri = Quickstart2.class.getResource("/My Project.p12").toURI();
+//		File p12File;
+//		if (uri.getScheme().equals("jar")) {
+//            final FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object> emptyMap());
+//            p12File = fileSystem.getPath("src/main/resources/My Project.p12").toFile();
+//        } else {
+//        	p12File = Paths.get(uri).toFile();
+//        }
+//		
 		GoogleCredential credential = new GoogleCredential.Builder()
 				.setTransport(HTTP_TRANSPORT)
 				.setJsonFactory(JSON_FACTORY)
@@ -97,8 +136,8 @@ public class Quickstart2 {
 						"calendarapp@massive-triumph-150916.iam.gserviceaccount.com")
 				//.setServiceAccountPrivateKeyId("0dc02b2ce032bd67fc5a039a61372a026358af6c")
 
-				.setServiceAccountPrivateKeyFromP12File(
-						p12File)
+				.setServiceAccountPrivateKeyFromP12File(tempFile)
+				//.setServiceAccountPrivateKeyId(serviceAccountPrivateKeyId)
 				.setServiceAccountScopes(SCOPES)
 				// .setServiceAccountScopes(Collections.singleton(SQLAdminScopes.SQLSERVICE_ADMIN))
 				.setServiceAccountUser("arianeziehn@googlemail.com")
@@ -112,8 +151,9 @@ public class Quickstart2 {
 				APPLICATION_NAME).build();
 	}
 
-	public static DailyEvents getData() throws IOException, ParseException,
+	public DailyEvents getData() throws IOException, ParseException,
 			GeneralSecurityException, URISyntaxException {
+		
 		// Build a new authorized API client service.
 		// Note: Do not confuse this class with the
 		// com.google.api.services.calendar.model.Calendar class.
@@ -257,7 +297,8 @@ public class Quickstart2 {
 	
 	public static void main(String[] args) throws IOException, ParseException,
 	GeneralSecurityException, URISyntaxException {
-		getData();
+		new Quickstart2().getData();
+		//this.getData();
 	}
 
 }

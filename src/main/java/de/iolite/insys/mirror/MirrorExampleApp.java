@@ -121,7 +121,8 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 		
 		
 			try {
-				calendar = Quickstart2.getData();
+				Quickstart2 quiiii = new Quickstart2();
+				calendar = quiiii.getData();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
