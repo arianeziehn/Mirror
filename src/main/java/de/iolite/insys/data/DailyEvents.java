@@ -29,6 +29,8 @@ public class DailyEvents {
 
 		@Override
 		public String toString(){
+		//new line	
+		String newline = System.lineSeparator();
 		String event = "";	
 		if(!todayEvents.isEmpty()){
 		for(int i=0; i<todayEvents.size(); i++){
@@ -40,18 +42,26 @@ public class DailyEvents {
 		if (minutes < 10){
 		ende = ":0"+minutes;
 		}
-		else
+		else 
 		ende = ":"+minutes;	
+		
+		
 		if (minutesStart < 10){
-		start = ":0"+minutes;
+		start = ":0"+minutesStart;
 		}
 		else
-		start = ":"+minutes;	
-		event += " WAS? "+dummy.Name+"\n WO?: "+dummy.Location+
-					"\n Status:"+ dummy.Status + 
-					"\n FARBE: "+dummy.Color+
-					"\n WANN? "+dummy.begin.get(Calendar.HOUR_OF_DAY)+start+
-					"\n BIS "+dummy.end.get(Calendar.HOUR_OF_DAY)+ende+"\n";
+		start = ":"+minutesStart;
+		
+		
+		event += dummy.Name+"\n Location: "+dummy.Location+
+//					"\n Status:"+ dummy.Status + 
+					"\n type: "+dummy.Color+
+//					"\n Start: "+dummy.begin.get(Calendar.HOUR_OF_DAY)+start+
+//					"\n End: "+dummy.end.get(Calendar.HOUR_OF_DAY)+ende+"\n" + newline;
+				
+					"\n " + dummy.begin.get(Calendar.HOUR_OF_DAY)+start + " - " +dummy.end.get(Calendar.HOUR_OF_DAY)+ende +"\n" + newline;
+		
+		
 		}	
 			return event;
 		}

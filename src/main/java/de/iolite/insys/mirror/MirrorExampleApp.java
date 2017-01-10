@@ -298,6 +298,7 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 
 			}
 
+		    
 			@Override
 			public IOLITEHTTPResponse handleRequest(final IOLITEHTTPRequest request, final EntityIdentifier callerEntityID, final String subPath) {
 				try {
@@ -309,7 +310,9 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 					final String template = IOUtils.toString(is, "UTF-8");
 
 					String replacement = MirrorExampleApp.this.calendar.toString();
-					String content = template.replaceFirst(Pattern.quote("{CALENDAR}"), replacement);
+					
+					String content = template.replaceFirst(Pattern.quote("{CALENDAR}"), replacement.replaceAll("\n","<br/>"));
+	
 					return new IOLITEHTTPStaticResponse(
 							content,
 									//.replaceFirst(Pattern.quote("{AUTHOR}"), MirrorExampleApp.this.quoteOfTheDay.getAuthor()),
