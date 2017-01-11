@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -15,10 +17,17 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.iolite.app.api.device.DeviceAPIException;
+import de.iolite.app.api.device.access.Device;
+import de.iolite.app.api.device.access.DeviceAPI;
+import de.iolite.app.api.device.access.DeviceBooleanProperty;
+import de.iolite.app.api.device.access.DeviceDoubleProperty;
 import de.iolite.api.IOLITEAPINotResolvableException;
 import de.iolite.api.IOLITEAPIProvider;
 import de.iolite.api.IOLITEPermissionDeniedException;
 import de.iolite.app.AbstractIOLITEApp;
+import de.iolite.app.api.device.access.Device;
+import de.iolite.app.api.device.access.DeviceAPI;
 import de.iolite.app.api.frontend.FrontendAPI;
 import de.iolite.app.api.frontend.FrontendAPIException;
 import de.iolite.app.api.frontend.util.FrontendAPIUtility;
@@ -35,10 +44,15 @@ import de.iolite.common.requesthandler.IOLITEHTTPRequestHandler;
 import de.iolite.common.requesthandler.IOLITEHTTPResponse;
 import de.iolite.common.requesthandler.IOLITEHTTPStaticResponse;
 import de.iolite.common.requesthandler.StaticResources;
+import de.iolite.drivers.basic.DriverConstants;
 import de.iolite.insys.data.DailyEvents;
 import de.iolite.insys.data.Quickstart2;
 import de.iolite.insys.mirror.api.MirrorApiException;
 import de.iolite.insys.mirror.api.SimpleMirrorManager;
+import de.iolite.utilities.time.series.Function;
+import de.iolite.utilities.time.series.TimeInterval;
+import de.iolite.utilities.time.series.DataEntries.AggregatedEntry;
+import de.iolite.utilities.time.series.DataEntries.BooleanEntry;
 
 /**
  * @author Hendrik Motza
@@ -87,7 +101,7 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 	private DailyEvents calendar = null; 
 
 	private SimpleMirrorManager mirrorManager;
-
+	private DeviceAPI deviceAPI;
 	private static final List<Quote> quotes = new ArrayList<Quote>();
 
 	/**
@@ -153,6 +167,26 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 			LOG.error(MSG_ERR_RETRIEVE_FRONTENDAPI, e);
 			throw new StartFailedException(MSG_ERR_RETRIEVE_FRONTENDAPI, e);
 		}
+		
+		// Device API gives access to devices connected to IOLITE
+		try {
+			LOG.debug("Ich starte hier");
+			for (final Device device : context.getAPI(DeviceAPI.class).getDevices()) {
+				if(device.getProfileIdentifier().equals(DriverConstants.PROFILE_WeatherStation_ID)){
+					DeviceDoubleProperty temp = device.getDoubleProperty(DriverConstants.PROPERTY_outsideEnvironmentTemperature_ID);
+					Double temperatur = temp.getValue();
+					LOG.debug("DIE TEMPARATUR IIIIIIIIIIISSSST'{}' ", temperatur.toString());
+					
+				}
+			}
+		} catch (IOLITEAPINotResolvableException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOLITEPermissionDeniedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 
 		final StorageAPI storageApi;
 		try {
@@ -209,8 +243,8 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 				}
 			}
 		}, 0, 1, TimeUnit.MINUTES);
-		LOG.debug("Mirror Views got registered!");
-		LOG.info("ExampleApp Path: "+frontendApi.getBaseURI());
+		//LOG.debug("Mirror Views got registered!");
+		//LOG.info("ExampleApp Path: "+frontendApi.getBaseURI());
 		System.out.println("v1");
 	}
 
@@ -337,6 +371,91 @@ public class MirrorExampleApp extends AbstractIOLITEApp {
 		this.quoteUpdateThread.cancel(false);
 		if (this.mirrorManager != null) {
 			this.mirrorManager.stopHook();
+		}
+	}
+	
+	/**
+	 * Example method showing how to use the Device API.
+	 */
+	private void initializeDeviceManager() {
+		// register a device observer
+		//this.deviceAPI.setObserver(new DeviceAddAndRemoveLogger());
+		LOG.debug("Bin drin");
+		// go through all devices, and register a property observer for ON/OFF properties
+		for (final Device device : this.deviceAPI.getDevices()) {
+			if(device.getProfileIdentifier().equals(DriverConstants.PROFILE_WeatherStation_ID)){
+				DeviceDoubleProperty temp = device.getDoubleProperty(DriverConstants.PROFILE_PROPERTY_WeatherStation_outsideEnvironmentTemperature_ID);
+				Double temperatur = temp.getValue();
+				LOG.debug("DIE TEMPARATUR IIIIIIIIIIISSSST'{}' ", temperatur.toString());
+				
+			}
+			
+//			// each device has some properties (accessible under device.getProperties())
+//			// let's get the 'on/off' status property
+//			
+//			final DeviceBooleanProperty onProperty = device.getBooleanProperty(DriverConstants.PROPERTY_on_ID);
+//			if (onProperty != null) {
+//				LOG.debug("device '{}' has ON/OFF property, current value: '{}'", device.getIdentifier(), onProperty.getValue());
+//
+//				onProperty.setObserver(new DeviceOnOffStatusLogger(device.getIdentifier()));
+//			}
+//		}
+//
+//		// go through all devices, and toggle ON/OFF properties
+//		for (final Device device : this.deviceAPI.getDevices()) {
+//			// let's get the 'on/off' status property
+//			final DeviceBooleanProperty onProperty = device.getBooleanProperty(DriverConstants.PROPERTY_on_ID);
+//			final Boolean onValue;
+//			if (onProperty != null && (onValue = onProperty.getValue()) != null) {
+//				LOG.debug("toggling device '{}'", device.getIdentifier());
+//				try {
+//					onProperty.requestValueUpdate(!onValue);
+//				}
+//				catch (final DeviceAPIException e) {
+//					LOG.error("Failed to control device", e);
+//				}
+//			}
+//		}
+//
+//		// go through all devices, and print ON/OFF and POWER USAGE property history datas
+//		for (final Device device : this.deviceAPI.getDevices()) {
+//			// ON/OFF history data
+//			final DeviceBooleanProperty onProperty = device.getBooleanProperty(DriverConstants.PROPERTY_on_ID);
+//			if (onProperty != null) {
+//				// retrieve the on/off history of last hour
+//				final long hourMillis = TimeUnit.SECONDS.toMillis(60 * 60);
+//				final List<BooleanEntry> onHistory;
+//				try {
+//					onHistory = onProperty.getValuesSince(System.currentTimeMillis() - hourMillis);
+//				}
+//				catch (final DeviceAPIException e) {
+//					LOG.error("Failed to retrieve the history of property '{}'", onProperty.getKey(), e);
+//					continue;
+//				}
+//				LOG.debug("Got '{}' historical values for property '{}'", onHistory.size(), onProperty.getKey());
+//				// log history values
+//				final DateFormat dateFormat = DateFormat.getTimeInstance();
+//				for (final BooleanEntry historyEntry : onHistory) {
+//					LOGGER.debug("At '{}' the value was '{}'", dateFormat.format(new Date(historyEntry.time)), historyEntry.value);
+//				}
+//			}
+//
+//			// POWER USAGE history data
+//			final DeviceDoubleProperty powerUsage = device.getDoubleProperty(DriverConstants.PROPERTY_powerUsage_ID);
+//			if (powerUsage != null) {
+//				LOGGER.debug("Reading today's hourly power usage data from device '{}':", device.getIdentifier());
+//				List<AggregatedEntry> history;
+//				try {
+//					history = powerUsage.getAggregatedValuesOf(System.currentTimeMillis(), TimeInterval.DAY, TimeInterval.HOUR, Function.AVERAGE);
+//					for (final AggregatedEntry entry : history) {
+//						LOGGER.debug("The device used an average of {} Watt at '{}'.", entry.getAggregatedValue(),
+//								DateFormat.getTimeInstance().format(new Date(entry.getEndTime())));
+//					}
+//				}
+//				catch (final DeviceAPIException e) {
+//					LOGGER.error("Failed to retrieve history data of device", e);
+//				}
+//			}
 		}
 	}
 

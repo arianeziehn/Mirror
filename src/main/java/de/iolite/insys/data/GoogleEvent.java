@@ -6,11 +6,6 @@ import java.util.Calendar;
  * by Ariane 
  */
 
-
-
-
-
-
 public class GoogleEvent {
 	String Name;
 	String Color;
